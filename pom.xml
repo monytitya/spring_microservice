@@ -20,18 +20,6 @@
 		<spring-cloud.version>2025.1.2</spring-cloud.version>
 	</properties>
 
-	<modules>
-		<module>config-server</module>
-		<module>discovery-server</module>
-		<module>api-gateway</module>
-		<module>customer-service</module>
-		<module>account-service</module>
-		<module>transaction-service</module>
-		<module>loan-service</module>
-		<module>card-service</module>
-		<module>notification-service</module>
-	</modules>
-
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
@@ -43,6 +31,17 @@
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
+
+	<modules>
+		<module>config-server</module>
+		<module>discovery-server</module>
+		<module>api-gateway</module>
+		<module>customer-service</module>
+		<module>account-service</module>
+		<module>transaction-service</module>
+		<module>loan-service</module>
+		<module>card-service</module>
+	</modules>
 
 	<build>
 		<plugins>
