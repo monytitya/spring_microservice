@@ -1,0 +1,13 @@
+target/
+*.jar
+*.tar.gz
+.git
+.gitignore
+README.md
+.mvn
+mvnw
+mvnw.cmd
+.DS_Store
+.idea
+*.iml
+*.log
