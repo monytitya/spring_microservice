@@ -22,26 +22,10 @@ COPY transaction-service ./transaction-service
 COPY loan-service ./loan-service
 COPY card-service ./card-service
 
-# Build all modules with retry logic and extended timeout
+# Build all modules. We don't use offline mode so Maven will download dependencies
 RUN mvn clean package -DskipTests \
-    -o false \
     --settings /root/.m2/settings.xml \
-    -Dorg.slf4j.simpleLogger.defaultLogLevel=INFO \
-    -Dhttp.keepAlive=true \
-    -Dmaven.wagon.http.pool=true \
-    -Dmaven.wagon.http.connectionManager.ttlSecs=25 \
-    -Dmaven.wagon.httpconnectionmanager.maxperroute=4 \
-    -Dmaven.wagon.httpconnectionmanager.maxTotal=8 \
-    -q || \
-    (echo "First build attempt failed, retrying..." && \
-    mvn clean package -DskipTests \
-    --settings /root/.m2/settings.xml \
-    -Dorg.slf4j.simpleLogger.defaultLogLevel=INFO \
-    -q) || \
-    (echo "Second build attempt failed, trying with verbose output..." && \
-    mvn clean package -DskipTests \
-    --settings /root/.m2/settings.xml \
-    -Dorg.slf4j.simpleLogger.defaultLogLevel=DEBUG)
+    -Dorg.slf4j.simpleLogger.defaultLogLevel=INFO
 
 # Stage 2: Runtime
 FROM eclipse-temurin:21-jre-alpine

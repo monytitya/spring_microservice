@@ -6,7 +6,7 @@
     <!-- Local repository location -->
     <localRepository>/root/.m2/repository</localRepository>
 
-    <!-- Offline mode disabled - we need to download dependencies -->
+    <!-- Offline mode disabled - fetch dependencies -->
     <offline>false</offline>
 
     <!-- Mirror configuration for faster downloads -->

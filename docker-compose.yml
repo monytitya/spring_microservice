@@ -48,7 +48,7 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
     healthcheck:
-      test: ["CMD", "kafka-broker-api-versions.sh", "--bootstrap-server=localhost:9092"]
+      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server=localhost:9092"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -67,10 +67,10 @@ services:
       postgres:
         condition: service_healthy
     environment:
-      SPRING_PROFILES_ACTIVE: docker
+      SPRING_PROFILES_ACTIVE: native,docker
       SERVER_PORT: 8888
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8888/actuator/health"]
+      test: ["CMD", "wget", "-qO-", "http://localhost:8888/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -94,7 +94,7 @@ services:
       SERVER_PORT: 8761
       SPRING_CONFIG_IMPORT: "optional:configserver:http://config-server:8888/"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      test: ["CMD", "wget", "-qO-", "http://localhost:8761/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -239,7 +239,7 @@ services:
         SERVICE_NAME: api-gateway
     container_name: banking-api-gateway
     ports:
-      - "8080:8080"
+      - "8090:8080"
     depends_on:
       discovery-server:
         condition: service_healthy
