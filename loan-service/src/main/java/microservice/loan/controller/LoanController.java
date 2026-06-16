@@ -61,4 +61,40 @@ public class LoanController {
         List<Loan> loans = loanRepository.findByCustomerId(customerId);
         return ResponseEntity.ok(loans);
     }
+
+    @GetMapping
+    public ResponseEntity<List<Loan>> getAllLoans() {
+        return ResponseEntity.ok(loanRepository.findAll());
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Loan> getLoanById(@PathVariable Long id) {
+        return loanRepository.findById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Loan> updateLoan(@PathVariable Long id, @RequestBody Loan loanDetails) {
+        return loanRepository.findById(id)
+                .map(loan -> {
+                    if (loanDetails.getAmount() != null) loan.setAmount(loanDetails.getAmount());
+                    if (loanDetails.getInterestRate() != null) loan.setInterestRate(loanDetails.getInterestRate());
+                    if (loanDetails.getTermMonths() != null) loan.setTermMonths(loanDetails.getTermMonths());
+                    if (loanDetails.getStatus() != null) loan.setStatus(loanDetails.getStatus());
+                    Loan updatedLoan = loanRepository.save(loan);
+                    return ResponseEntity.ok(updatedLoan);
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteLoan(@PathVariable Long id) {
+        return loanRepository.findById(id)
+                .map(loan -> {
+                    loanRepository.delete(loan);
+                    return ResponseEntity.ok().build();
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
 }

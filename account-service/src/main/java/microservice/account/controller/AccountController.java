@@ -7,6 +7,7 @@ import java.util.Random;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -114,5 +115,50 @@ public class AccountController {
         account.setBalance(newBalance);
         accountRepository.save(account);
         return ResponseEntity.ok(account);
+    }
+
+    @GetMapping
+    @Operation(summary = "Get all accounts", description = "Retrieves all bank accounts")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Accounts retrieved successfully")
+    })
+    public ResponseEntity<List<BankAccount>> getAllAccounts() {
+        return ResponseEntity.ok(accountRepository.findAll());
+    }
+
+    @PutMapping("/id/{id}")
+    @Operation(summary = "Update account details", description = "Updates details of a specific bank account by ID")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Account updated successfully"),
+            @ApiResponse(responseCode = "404", description = "Account not found")
+    })
+    public ResponseEntity<BankAccount> updateAccount(@PathVariable Long id, @RequestBody BankAccount accountDetails) {
+        return accountRepository.findById(id)
+                .map(account -> {
+                    if (accountDetails.getAccountType() != null) {
+                        account.setAccountType(accountDetails.getAccountType());
+                    }
+                    if (accountDetails.getStatus() != null) {
+                        account.setStatus(accountDetails.getStatus());
+                    }
+                    BankAccount updatedAccount = accountRepository.save(account);
+                    return ResponseEntity.ok(updatedAccount);
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Delete an account", description = "Deletes a bank account by ID")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Account deleted successfully"),
+            @ApiResponse(responseCode = "404", description = "Account not found")
+    })
+    public ResponseEntity<?> deleteAccount(@PathVariable Long id) {
+        return accountRepository.findById(id)
+                .map(account -> {
+                    accountRepository.delete(account);
+                    return ResponseEntity.ok().build();
+                })
+                .orElse(ResponseEntity.notFound().build());
     }
 }

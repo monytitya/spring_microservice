@@ -193,4 +193,41 @@ public class TransactionController {
         List<Transaction> history = transactionRepository.findByFromAccountOrToAccountOrderByTimestampDesc(accountNumber, accountNumber);
         return ResponseEntity.ok(history);
     }
+
+    @GetMapping
+    public ResponseEntity<List<Transaction>> getAllTransactions() {
+        return ResponseEntity.ok(transactionRepository.findAll());
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Transaction> getTransactionById(@PathVariable Long id) {
+        return transactionRepository.findById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Transaction> updateTransaction(@PathVariable Long id, @RequestBody Transaction txDetails) {
+        return transactionRepository.findById(id)
+                .map(tx -> {
+                    if (txDetails.getAmount() != null) tx.setAmount(txDetails.getAmount());
+                    if (txDetails.getType() != null) tx.setType(txDetails.getType());
+                    if (txDetails.getStatus() != null) tx.setStatus(txDetails.getStatus());
+                    if (txDetails.getFromAccount() != null) tx.setFromAccount(txDetails.getFromAccount());
+                    if (txDetails.getToAccount() != null) tx.setToAccount(txDetails.getToAccount());
+                    Transaction updatedTx = transactionRepository.save(tx);
+                    return ResponseEntity.ok(updatedTx);
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteTransaction(@PathVariable Long id) {
+        return transactionRepository.findById(id)
+                .map(tx -> {
+                    transactionRepository.delete(tx);
+                    return ResponseEntity.ok().build();
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
 }
