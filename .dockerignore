@@ -1,13 +1,52 @@
+# ── Build artifacts ──────────────────────────────────────────────────────────
 target/
 *.jar
+*.war
+
+# ── Compressed archives (pre-bundled Maven/JRE tarballs) ────────────────────
 *.tar.gz
+*.zip
+
+# ── Version control ──────────────────────────────────────────────────────────
 .git
 .gitignore
-README.md
-.mvn
+.gitattributes
+
+# ── IDE and editor files ─────────────────────────────────────────────────────
+.idea/
+*.iml
+.vscode/
+*.code-workspace
+.DS_Store
+Thumbs.db
+
+# ── Maven wrapper (not needed inside Docker — Maven image is used) ───────────
+.mvn/
 mvnw
 mvnw.cmd
-.DS_Store
-.idea
-*.iml
+
+# ── Documentation ────────────────────────────────────────────────────────────
+*.md
+docs/
+
+# ── Environment & secrets — NEVER bake into images ──────────────────────────
+.env
+.env.*
+*.env
+
+# ── Windows/Linux helper scripts (runtime only) ──────────────────────────────
+*.bat
+*.ps1
+*.sh
+
+# ── Logs ─────────────────────────────────────────────────────────────────────
 *.log
+logs/
+
+# ── Test reports ─────────────────────────────────────────────────────────────
+**/surefire-reports/
+**/failsafe-reports/
+
+# ── Monitoring config (separate compose file handles this) ───────────────────
+prometheus/
+grafana/
