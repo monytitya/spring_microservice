@@ -1,14 +1,7 @@
-# =============================================================================
-# Security Scanning Pipeline
-# Triggers: push to main + weekly schedule (Sundays at 2AM UTC)
-#
-# Reports go to:
-#   - GitHub Security → Code Scanning Alerts (SARIF upload)
-#   - Workflow artifacts (HTML reports)
-# =============================================================================
+
 
 name: Security — Vulnerability Scanning
-
+  
 on:
   push:
     branches: [main]
@@ -28,20 +21,19 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: ⬇️ Checkout source
+      - name: ⬇Checkout source
         uses: actions/checkout@v4
-
-      - name: ☕ Set up Java ${{ env.JAVA_VERSION }}
+      - name:  Set up Java ${{ env.JAVA_VERSION }}
         uses: actions/setup-java@v4
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: temurin
           cache: maven
 
-      - name: 🔨 Build project (skip tests)
+      - name:  Build project (skip tests)
         run: mvn clean package -DskipTests -B
 
-      - name: 🛡️ Run OWASP Dependency Check
+      - name: Run OWASP Dependency Check
         uses: dependency-check/Dependency-Check_Action@main
         with:
           project: "spring-banking-microservices"
@@ -54,7 +46,7 @@ jobs:
             --suppression suppression.xml
         continue-on-error: true
 
-      - name: 📤 Upload OWASP report
+      - name: Upload OWASP report
         uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -62,7 +54,7 @@ jobs:
           path: reports/dependency-check/
           retention-days: 30
 
-      - name: 📤 Upload SARIF to GitHub Security
+      - name:  Upload SARIF to GitHub Security
         uses: github/codeql-action/upload-sarif@v3
         if: always()
         with:
