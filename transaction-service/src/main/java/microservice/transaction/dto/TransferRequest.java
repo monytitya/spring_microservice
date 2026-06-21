@@ -23,7 +23,6 @@ public class TransferRequest {
         return amount;
     }
 
-    // Setters
     public void setFromAccountNumber(String fromAccountNumber) {
         this.fromAccountNumber = fromAccountNumber;
     }
