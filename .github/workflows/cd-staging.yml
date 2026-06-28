@@ -1,15 +1,3 @@
-# =============================================================================
-# CD Staging Pipeline — Deploy to Staging Environment
-# Triggers: push to "develop" branch
-#
-# Required GitHub Secrets:
-#   GHCR_TOKEN          → GitHub Personal Access Token (write:packages)
-#   STAGING_HOST        → SSH host (IP or hostname)
-#   STAGING_USER        → SSH username (e.g. ubuntu)
-#   STAGING_SSH_KEY     → Private SSH key (PEM format)
-#   STAGING_DEPLOY_PATH → Remote path where docker-compose.yml lives
-# =============================================================================
-
 name: CD — Deploy to Staging
 
 on:
@@ -23,7 +11,6 @@ env:
   IMAGE_TAG: staging-${{ github.sha }}
 
 jobs:
-  # ── Job 1: Build & Push Images ─────────────────────────────────────────────
   build-and-push:
     name: Build & Push Images
     runs-on: ubuntu-latest
@@ -45,39 +32,39 @@ jobs:
           - card-service
 
     steps:
-      - name: ⬇️ Checkout source
+      - name: ⬇ Checkout source
         uses: actions/checkout@v4
 
-      - name: ☕ Set up Java ${{ env.JAVA_VERSION }}
+      - name: Set up Java ${{ env.JAVA_VERSION }}
         uses: actions/setup-java@v4
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: temurin
           cache: maven
 
-      - name: 🔨 Build ${{ matrix.service }} JAR
+      - name:  Build ${{ matrix.service }} JAR
         run: mvn clean package -pl ${{ matrix.service }} -am -DskipTests -B
 
-      - name: 🐳 Set up Docker Buildx
+      - name:  Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: 🔑 Log in to GitHub Container Registry
+      - name:  Log in to GitHub Container Registry
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GHCR_TOKEN }}
 
-      - name: 🏷️ Extract metadata
+      - name:  Extract metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.IMAGE_PREFIX }}/${{ matrix.service }}
-          tags: |
+          tags: 
             type=raw,value=staging-${{ github.sha }}
             type=raw,value=staging-latest
 
-      - name: 🚀 Build & Push — ${{ matrix.service }}
+      - name:  Build & Push — ${{ matrix.service }}
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -90,7 +77,6 @@ jobs:
           cache-from: type=gha,scope=${{ matrix.service }}
           cache-to: type=gha,mode=max,scope=${{ matrix.service }}
 
-  # ── Job 2: Deploy to Staging Server ───────────────────────────────────────
   deploy-staging:
     name: Deploy to Staging
     runs-on: ubuntu-latest
@@ -98,10 +84,10 @@ jobs:
     environment: staging
 
     steps:
-      - name: ⬇️ Checkout source (for compose files)
+      - name: ⬇ Checkout source (for compose files)
         uses: actions/checkout@v4
 
-      - name: 🚢 Deploy via SSH
+      - name:  Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.STAGING_HOST }}
@@ -115,31 +101,31 @@ jobs:
             export IMAGE_TAG=staging-${{ github.sha }}
             export REGISTRY=${{ env.REGISTRY }}/${{ github.repository_owner }}
 
-            echo "🔑 Logging into GHCR..."
+            echo " Logging into GHCR..."
             echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-            echo "📥 Pulling new images..."
+            echo " Pulling new images..."
             IMAGE_TAG=${IMAGE_TAG} docker compose pull
 
-            echo "♻️ Restarting services with zero downtime..."
+            echo " Restarting services with zero downtime..."
             IMAGE_TAG=${IMAGE_TAG} docker compose up -d --remove-orphans
 
-            echo "🧹 Cleaning up old images..."
+            echo " Cleaning up old images..."
             docker image prune -f
 
-            echo "✅ Staging deployment complete! Tag: ${IMAGE_TAG}"
+            echo " Staging deployment complete! Tag: ${IMAGE_TAG}"
 
-      - name: 📣 Notify deployment success
+      - name:  Notify deployment success
         if: success()
         run: |
-          echo "✅ Staging deployment succeeded!"
+          echo " Staging deployment succeeded!"
           echo "  Branch : ${{ github.ref_name }}"
           echo "  Commit : ${{ github.sha }}"
           echo "  Tag    : staging-${{ github.sha }}"
 
-      - name: 📣 Notify deployment failure
+      - name:  Notify deployment failure
         if: failure()
         run: |
-          echo "❌ Staging deployment FAILED!"
+          echo "s Staging deployment FAILED!"
           echo "  Branch : ${{ github.ref_name }}"
           echo "  Commit : ${{ github.sha }}"

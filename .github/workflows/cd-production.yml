@@ -1,14 +1,3 @@
-# =============================================================================
-# CD Production Pipeline — Deploy to Production
-# Triggers: push of a version tag  v*.*.*  (e.g. v1.2.0)
-#
-# Required GitHub Secrets (same as staging + prod equivalents):
-#   GHCR_TOKEN           → GitHub Personal Access Token (write:packages)
-#   PROD_HOST            → Production server SSH host
-#   PROD_USER            → Production server SSH username
-#   PROD_SSH_KEY         → Production server SSH private key
-#   PROD_DEPLOY_PATH     → Remote path where docker-compose.yml lives
-# =============================================================================
 
 name: CD — Deploy to Production
 
@@ -23,7 +12,6 @@ env:
   IMAGE_PREFIX: ghcr.io/${{ github.repository_owner }}
 
 jobs:
-  # ── Job 1: Extract version info ─────────────────────────────────────────────
   prepare:
     name: Prepare Release
     runs-on: ubuntu-latest
@@ -33,16 +21,16 @@ jobs:
       changelog: ${{ steps.changelog.outputs.content }}
 
     steps:
-      - name: ⬇️ Checkout source (full history for changelog)
+      - name: ⬇ Checkout source (full history for changelog)
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: 🏷️ Extract version tag
+      - name:  Extract version tag
         id: version
         run: echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
 
-      - name: 📋 Generate changelog
+      - name:  Generate changelog
         id: changelog
         run: |
           PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
@@ -55,7 +43,6 @@ jobs:
           echo "$CHANGELOG" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
-  # ── Job 2: Build & Push Images ─────────────────────────────────────────────
   build-and-push:
     name: Build & Push — ${{ matrix.service }}
     runs-on: ubuntu-latest
@@ -75,30 +62,30 @@ jobs:
           - card-service
 
     steps:
-      - name: ⬇️ Checkout source
+      - name: ⬇Checkout source
         uses: actions/checkout@v4
 
-      - name: ☕ Set up Java ${{ env.JAVA_VERSION }}
+      - name:  Set up Java ${{ env.JAVA_VERSION }}
         uses: actions/setup-java@v4
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: temurin
           cache: maven
 
-      - name: 🔨 Build ${{ matrix.service }} JAR
+      - name:  Build ${{ matrix.service }} JAR
         run: mvn clean package -pl ${{ matrix.service }} -am -DskipTests -B
 
-      - name: 🐳 Set up Docker Buildx
+      - name:  Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: 🔑 Log in to GitHub Container Registry
+      - name:  Log in to GitHub Container Registry
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GHCR_TOKEN }}
 
-      - name: 🏷️ Extract metadata
+      - name:  Extract metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
@@ -108,7 +95,7 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
             type=raw,value=latest
 
-      - name: 🚀 Build & Push — ${{ matrix.service }}
+      - name:  Build & Push — ${{ matrix.service }}
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -129,10 +116,10 @@ jobs:
     environment: production   # ← requires manual approval in GitHub
 
     steps:
-      - name: ⬇️ Checkout source
+      - name: ⬇ Checkout source
         uses: actions/checkout@v4
 
-      - name: 🚢 Deploy via SSH
+      - name:  Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.PROD_HOST }}
@@ -145,19 +132,19 @@ jobs:
             export VERSION=${{ needs.prepare.outputs.version }}
             export IMAGE_TAG=${VERSION}
 
-            echo "🔑 Logging into GHCR..."
+            echo " Logging into GHCR..."
             echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-            echo "📥 Pulling production images (version: ${VERSION})..."
+            echo " Pulling production images (version: ${VERSION})..."
             IMAGE_TAG=${IMAGE_TAG} docker compose pull
 
-            echo "♻️ Rolling restart..."
+            echo " Rolling restart..."
             IMAGE_TAG=${IMAGE_TAG} docker compose up -d --remove-orphans
 
-            echo "🧹 Pruning old images..."
+            echo " Pruning old images..."
             docker image prune -f
 
-            echo "✅ Production deployment complete! Version: ${VERSION}"
+            echo " Production deployment complete! Version: ${VERSION}"
 
   # ── Job 4: Create GitHub Release ──────────────────────────────────────────
   github-release:
@@ -166,13 +153,13 @@ jobs:
     needs: [prepare, deploy-production]
 
     steps:
-      - name: 📦 Create GitHub Release
+      - name:  Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ needs.prepare.outputs.version }}
-          name: "🚀 Release ${{ needs.prepare.outputs.version }}"
+          name: " Release ${{ needs.prepare.outputs.version }}"
           body: |
-            ## 🏦 Banking Microservices — ${{ needs.prepare.outputs.version }}
+            ##  Banking Microservices — ${{ needs.prepare.outputs.version }}
 
             ### Docker Images
             All images published to GitHub Container Registry:

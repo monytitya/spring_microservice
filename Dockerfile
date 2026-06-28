@@ -11,6 +11,7 @@ WORKDIR /app
 
 # Copy Maven settings for better repository management
 COPY maven-settings.xml /root/.m2/settings.xml
+ENV MAVEN_OPTS="-Dmaven.repo.local=/root/.m2/repository"
 
 # ── Dependency caching: copy only POMs first for layer caching ──
 COPY pom.xml .

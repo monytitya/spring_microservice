@@ -6,8 +6,8 @@ on:
   push:
     branches: [main]
   schedule:
-    - cron: "0 2 * * 0"   # Every Sunday at 02:00 UTC
-  workflow_dispatch:        # Allow manual trigger
+    - cron: "0 2 * * 0"  
+  workflow_dispatch:        
 
 env:
   JAVA_VERSION: "21"
@@ -15,7 +15,6 @@ env:
   IMAGE_PREFIX: ghcr.io/${{ github.repository_owner }}
 
 jobs:
-  # ── Job 1: OWASP Dependency Check ─────────────────────────────────────────
   dependency-check:
     name: OWASP Dependency Check
     runs-on: ubuntu-latest
@@ -61,7 +60,6 @@ jobs:
           sarif_file: reports/dependency-check/dependency-check-report.sarif
         continue-on-error: true
 
-  # ── Job 2: Trivy Container Image Scanning ─────────────────────────────────
   trivy-image-scan:
     name: Trivy Scan — ${{ matrix.service }}
     runs-on: ubuntu-latest
@@ -80,23 +78,23 @@ jobs:
           - card-service
 
     steps:
-      - name: ⬇️ Checkout source
+      - name: ⬇Checkout source
         uses: actions/checkout@v4
 
-      - name: ☕ Set up Java ${{ env.JAVA_VERSION }}
+      - name:  Set up Java ${{ env.JAVA_VERSION }}
         uses: actions/setup-java@v4
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: temurin
           cache: maven
 
-      - name: 🔨 Build ${{ matrix.service }} JAR
+      - name:  Build ${{ matrix.service }} JAR
         run: mvn clean package -pl ${{ matrix.service }} -am -DskipTests -B
 
-      - name: 🐳 Set up Docker Buildx
+      - name:  Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: 🏗️ Build Docker image locally for scanning
+      - name:  Build Docker image locally for scanning
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -107,16 +105,16 @@ jobs:
           tags: banking/${{ matrix.service }}:scan
           load: true
 
-      - name: 🔍 Run Trivy vulnerability scanner
+      - name:  Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: banking/${{ matrix.service }}:scan
           format: "sarif"
           output: "trivy-${{ matrix.service }}.sarif"
           severity: "CRITICAL,HIGH"
-          exit-code: "0"   # Don't fail the build; report only
+          exit-code: "0"  
 
-      - name: 📊 Run Trivy — Table output (human readable)
+      - name:  Run Trivy — Table output (human readable)
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: banking/${{ matrix.service }}:scan
@@ -124,7 +122,7 @@ jobs:
           severity: "CRITICAL,HIGH,MEDIUM"
           exit-code: "0"
 
-      - name: 📤 Upload Trivy SARIF to GitHub Security
+      - name:  Upload Trivy SARIF to GitHub Security
         uses: github/codeql-action/upload-sarif@v3
         if: always()
         with:
@@ -132,7 +130,7 @@ jobs:
           category: "trivy-${{ matrix.service }}"
         continue-on-error: true
 
-      - name: 📤 Upload Trivy SARIF artifact
+      - name:  Upload Trivy SARIF artifact
         uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -140,16 +138,15 @@ jobs:
           path: trivy-${{ matrix.service }}.sarif
           retention-days: 30
 
-  # ── Job 3: Filesystem Scan (source code secrets) ──────────────────────────
   trivy-fs-scan:
     name: Trivy Filesystem Scan
     runs-on: ubuntu-latest
 
     steps:
-      - name: ⬇️ Checkout source
+      - name: ⬇Checkout source
         uses: actions/checkout@v4
 
-      - name: 🔍 Trivy filesystem scan (secrets + misconfigs)
+      - name:  Trivy filesystem scan (secrets + misconfigs)
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: "fs"
@@ -160,7 +157,7 @@ jobs:
           scanners: "secret,misconfig"
           exit-code: "0"
 
-      - name: 📤 Upload SARIF to GitHub Security
+      - name:  Upload SARIF to GitHub Security
         uses: github/codeql-action/upload-sarif@v3
         if: always()
         with:
@@ -168,7 +165,6 @@ jobs:
           category: "trivy-filesystem"
         continue-on-error: true
 
-  # ── Job 4: Security Summary ────────────────────────────────────────────────
   security-summary:
     name: Security Summary
     runs-on: ubuntu-latest
@@ -176,7 +172,7 @@ jobs:
     if: always()
 
     steps:
-      - name: 📝 Summary
+      - name:  Summary
         run: |
           echo "## 🔒 Security Scan Results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
