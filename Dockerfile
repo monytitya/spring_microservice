@@ -69,7 +69,7 @@ EXPOSE 8080
 
 # Health check using the Spring Boot Actuator endpoint
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-    CMD wget -qO- http://localhost:8080/actuator/health | grep -q '"status":"UP"' || exit 1
+    CMD sh -c 'wget -qO- "http://localhost:${SERVER_PORT:-8080}/actuator/health" | grep -q '"'"'"status":"UP"'"'"' || exit 1'
 
 # JVM tuning: container-aware heap sizing + GC logging
 ENTRYPOINT ["java", \
